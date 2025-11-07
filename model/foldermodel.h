@@ -38,7 +38,7 @@
 #include <KDirLister>
 #include <KDirModel>
 #include <KDirWatch>
-#include <KActionCollection>
+//#include <KActionCollection> // ---kf5 descard
 
 class QDrag;
 class CFileSizeJob;

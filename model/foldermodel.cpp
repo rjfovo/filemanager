@@ -46,7 +46,8 @@
 #include <QDBusInterface>
 #include <QStandardPaths>
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QScreen>
+#include <QGuiApplication>
 #include <QMimeDatabase>
 #include <QMimeData>
 #include <QClipboard>
