@@ -543,8 +543,8 @@ void FolderModel::setFilterPattern(const QString &pattern)
     m_regExps.reserve(patterns.count());
 
     foreach (const QString &pattern, patterns) {
-        QRegExp rx(pattern);
-        rx.setPatternSyntax(QRegExp::Wildcard);
+        QRegularExpression  rx(pattern);
+        rx.setPatternSyntax(QRegularExpression::Wildcard);
         rx.setCaseSensitivity(Qt::CaseInsensitive);
         m_regExps.append(rx);
     }

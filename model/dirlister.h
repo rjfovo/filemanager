@@ -20,10 +20,11 @@
 #ifndef DIRLISTER_H
 #define DIRLISTER_H
 
-#include <KDirLister>
+#include <QObject>
+#include <KIO/ListJob>
 #include <KIO/Job>
 
-class DirLister : public KDirLister
+class DirLister : public QObject
 {
     Q_OBJECT
 
@@ -31,11 +32,17 @@ public:
     explicit DirLister(QObject *parent = nullptr);
     ~DirLister() override;
 
+    void openUrl(const QUrl &url);
+
+private Q_SLOTS:
+    void handleEntries(KIO::Job *job, const KIO::UDSEntryList &entries);
+    void handleResult(KJob *job);
+    void handleError(KJob *job);
+
 Q_SIGNALS:
     void error(const QString &string);
-
-protected:
-    void handleError(KIO::Job *job) override;
+    void newItems(const KIO::UDSEntryList &entries);
+    void completed();
 };
 
 #endif // DIRLISTER_H

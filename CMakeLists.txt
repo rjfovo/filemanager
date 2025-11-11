@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 17)  # Qt6推荐使用C++17[citation:6]
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 查找Qt6包，使用无版本命令[citation:3]
-find_package(Qt6 REQUIRED COMPONENTS Core DBus Quick LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core DBus Quick LinguistTools)
 
 # 查找KF6包，注意模块名称可能有所变化
 find_package(KF6KIO REQUIRED)
@@ -80,10 +80,11 @@ target_link_libraries(cutefish-filemanager
   Qt6::Core
   Qt6::DBus
   Qt6::Quick
+  Qt6::Widgets
 
+  KF6::KIOWidgets
   KF6::KIOCore
   KF6::KIOGui
-  KF6::KIOWidgets
   KF6::Solid
   KF6::WindowSystem
   KF6::ConfigCore

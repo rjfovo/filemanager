@@ -18,9 +18,10 @@
  */
 
 #include "dirlister.h"
+#include <KIO/ListJob>
 
 DirLister::DirLister(QObject *parent)
-    : KDirLister(parent)
+    : QObject(parent)
 {
 }
 
@@ -28,12 +29,29 @@ DirLister::~DirLister()
 {
 }
 
-void DirLister::handleError(KIO::Job *job)
+void DirLister::openUrl(const QUrl &url)
 {
-    if (!autoErrorHandlingEnabled()) {
-        emit error(job->errorString());
-        return;
-    }
+    KIO::ListJob *job = KIO::listDir(url);
+    connect(job, &KIO::ListJob::entries, this, &DirLister::handleEntries);
+    connect(job, &KJob::result, this, &DirLister::handleResult);
+}
 
-    KDirLister::handleError(job);
+void DirLister::handleEntries(KIO::Job *job, const KIO::UDSEntryList &entries)
+{
+    Q_UNUSED(job)
+    emit newItems(entries);
+}
+
+void DirLister::handleResult(KJob *job)
+{
+    if (job->error()) {
+        handleError(job);
+    } else {
+        emit completed();
+    }
+}
+
+void DirLister::handleError(KJob *job)
+{
+    emit error(job->errorString());
 }
