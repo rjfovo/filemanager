@@ -18,6 +18,7 @@ find_package(KF6KIO REQUIRED)
 find_package(KF6Solid REQUIRED)
 find_package(KF6WindowSystem REQUIRED)
 find_package(KF6Config REQUIRED)
+find_package(KF6XmlGui REQUIRED)
 
 # 使用Qt6的DBus适配器命令
 qt6_add_dbus_adaptor(DBUS_SOURCES
@@ -85,6 +86,7 @@ target_link_libraries(cutefish-filemanager
   KF6::KIOWidgets
   KF6::KIOCore
   KF6::KIOGui
+  KF6::XmlGui
   KF6::Solid
   KF6::WindowSystem
   KF6::ConfigCore

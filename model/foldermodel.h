@@ -40,7 +40,7 @@
 #include <KDirModel>
 #include <KDirWatch>
 #include <KConfigGroup>
-//#include <KActionCollection> // ---kf5 descard
+#include <KActionCollection>
 
 class QDrag;
 class CFileSizeJob;

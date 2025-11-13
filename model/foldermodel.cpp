@@ -77,6 +77,7 @@
 #include <KUrlMimeData>
 #include <KFileItemListProperties>
 #include <KDesktopFile>
+#include <KIO/DeleteOrTrashJob> // 用于 trash 和删除操作
 
 static bool isDropBetweenSharedViews(const QList<QUrl> &urls, const QUrl &folderUrl)
 {
@@ -117,11 +118,11 @@ FolderModel::FolderModel(QObject *parent)
     m_updateNeedSelectTimer->setInterval(50);
     connect(m_updateNeedSelectTimer, &QTimer::timeout, this, &FolderModel::updateNeedSelectUrls);
 
-    m_dirLister = new DirLister(this);
+    m_dirLister = new KDirLister(this);
     m_dirLister->setDelayedMimeTypes(true);
-    m_dirLister->setAutoErrorHandlingEnabled(false, nullptr);
+    m_dirLister->setAutoErrorHandlingEnabled(false);
     m_dirLister->setAutoUpdate(true);
-    m_dirLister->setShowingDotFiles(m_showHiddenFiles);
+    m_dirLister->setShowHiddenFiles(m_showHiddenFiles);
     // connect(dirLister, &DirLister::error, this, &FolderModel::notification);
 
     connect(m_dirLister, &KCoreDirLister::started, this, std::bind(&FolderModel::setStatus, this, Status::Listing));
@@ -543,9 +544,7 @@ void FolderModel::setFilterPattern(const QString &pattern)
     m_regExps.reserve(patterns.count());
 
     foreach (const QString &pattern, patterns) {
-        QRegularExpression  rx(pattern);
-        rx.setPatternSyntax(QRegularExpression::Wildcard);
-        rx.setCaseSensitivity(Qt::CaseInsensitive);
+        QRegularExpression rx = QRegularExpression::fromWildcard(pattern, Qt::CaseInsensitive);
         m_regExps.append(rx);
     }
 
@@ -737,7 +736,7 @@ void FolderModel::refresh()
 
 void FolderModel::undo()
 {
-    if (KIO::FileUndoManager::self()->undoAvailable()) {
+    if (KIO::FileUndoManager::self()->isUndoAvailable()) {
         KIO::FileUndoManager::self()->undo();
     }
 }
@@ -893,8 +892,17 @@ void FolderModel::newFolder()
 
     m_newDocumentUrl = QUrl(rootItem().url().toString() + "/" + newName);
 
-    auto job = KIO::mkdir(QUrl(rootItem().url().toString() + "/" + newName));
-    job->start();
+    QString newDirPath = rootItem().url().toLocalFile() + "/" + newName;
+    QDir dir;
+
+    // 使用 mkpath 可以创建多级目录，mkdir 只能创建单级目录
+    if (dir.mkpath(newDirPath)) {
+        // 目录创建成功
+        qDebug() << "Directory created successfully at" << newDirPath;
+    } else {
+        // 目录创建失败
+        qDebug() << "Failed to create directory at" << newDirPath;
+    }
 }
 
 void FolderModel::newTextFile()
@@ -1109,13 +1117,15 @@ void FolderModel::moveSelectedToTrash()
     }
 
     const QList<QUrl> urls = selectedUrls();
-    KIO::JobUiDelegate uiDelegate;
 
-    if (uiDelegate.askDeleteConfirmation(urls, KIO::JobUiDelegate::Trash, KIO::JobUiDelegate::DefaultConfirmation)) {
-        KIO::Job *job = KIO::trash(urls);
-        job->uiDelegate()->setAutoErrorHandlingEnabled(true);
-        KIO::FileUndoManager::self()->recordJob(KIO::FileUndoManager::Trash, urls, QUrl(QStringLiteral("trash:/")), job);
-    }
+    auto *job = new KIO::DeleteOrTrashJob(
+        urls,
+        KIO::AskUserActionInterface::Trash,
+        KIO::AskUserActionInterface::DefaultConfirmation,
+        this);
+
+    job->uiDelegate()->setAutoErrorHandlingEnabled(true);
+    job->start();
 }
 
 void FolderModel::emptyTrash()
@@ -1695,9 +1705,9 @@ bool FolderModel::matchPattern(const KFileItem &item) const
     }
 
     const QString name = item.name();
-    QListIterator<QRegExp> i(m_regExps);
+    QListIterator<QRegularExpression> i(m_regExps);
     while (i.hasNext()) {
-        if (i.next().exactMatch(name)) {
+        if (i.next().match(name).hasMatch()) {
             return true;
         }
     }
@@ -1715,7 +1725,7 @@ void FolderModel::setShowHiddenFiles(bool showHiddenFiles)
     if (m_showHiddenFiles != showHiddenFiles) {
         m_showHiddenFiles = showHiddenFiles;
 
-        m_dirLister->setShowingDotFiles(m_showHiddenFiles);
+        m_dirLister->setShowHiddenFiles(m_showHiddenFiles);
         m_dirLister->emitChanges();
 
         QSettings settings("cutefishos", qApp->applicationName());
