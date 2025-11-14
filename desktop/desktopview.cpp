@@ -27,6 +27,8 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QWindow>
+#include <QWidget>
 
 #include <KWindowSystem>
 
@@ -37,8 +39,8 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
     m_screenRect = m_screen->geometry();
     this->setFlag(Qt::FramelessWindowHint);
     this->setColor(QColor(Qt::transparent));
-    KWindowSystem::setType(winId(), NET::Desktop);
-    KWindowSystem::setState(winId(), NET::KeepBelow);
+
+    setFlags(flags() | Qt::WindowType::Desktop | Qt::WindowStaysOnBottomHint);
 
     engine()->rootContext()->setContextProperty("desktopView", this);
     engine()->rootContext()->setContextProperty("Dock", DockDBusInterface::self());
