@@ -33,6 +33,9 @@ public:
 
 protected:
     bool eventFilter(QObject *o, QEvent *e);
+
+private slots:
+    void onObjectCreated(QObject *object, const QUrl &url);
 };
 
 #endif // WINDOW_H

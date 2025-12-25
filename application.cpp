@@ -117,6 +117,7 @@ void Application::openWindow(const QString &path)
     Window *w = new Window;
     w->rootContext()->setContextProperty("arg", path);
     w->addImageProvider("thumbnailer", new ThumbnailProvider());
+    
     w->load(QUrl("qrc:/qml/main.qml"));
 }
 

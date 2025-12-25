@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick 6.0
+import QtQuick.Controls 6.0
+import QtQuick.Layouts 6.0
 
 import Cutefish.FileManager 1.0
 import Cutefish.DragDrop 1.0 as DragDrop

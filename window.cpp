@@ -26,16 +26,22 @@
 Window::Window(QObject *parent)
     : QQmlApplicationEngine(parent)
 {
+    connect(this, &QQmlApplicationEngine::objectCreated,
+            this, &Window::onObjectCreated);
 }
 
 void Window::load(const QUrl &url)
 {
     QQmlApplicationEngine::load(url);
+}
 
-    QQuickWindow *w = qobject_cast<QQuickWindow *>(rootObjects().first());
-
-    if (w)
+void Window::onObjectCreated(QObject *object, const QUrl &url)
+{
+    Q_UNUSED(url);
+    QQuickWindow *w = qobject_cast<QQuickWindow *>(object);
+    if (w) {
         w->installEventFilter(this);
+    }
 }
 
 bool Window::eventFilter(QObject *obj, QEvent *e)
