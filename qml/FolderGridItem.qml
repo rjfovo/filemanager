@@ -44,21 +44,21 @@ Item {
     // For desktop
     visible: GridView.view.isDesktopView ? !blank : true
 
-    onSelectedChanged: {
-        if (!GridView.view.isDesktopView)
-            return
+        onSelectedChanged: {
+            if (!GridView.view.isDesktopView)
+                return
 
-        if (selected && !blank) {
-            control.grabToImage(function(result) {
-                dirModel.addItemDragImage(control.index,
-                                          control.x,
-                                          control.y,
-                                          control.width,
-                                          control.height,
-                                          result.image)
-            })
+            if (selected && !blank) {
+                control.grabToImage(function(result) {
+                    dirModel.addItemDragImage(control.index,
+                                              control.x,
+                                              control.y,
+                                              control.width,
+                                              control.height,
+                                              result.image)
+                }, Qt.size(control.width, control.height))
+            }
         }
-    }
 
     Rectangle {
         id: _background

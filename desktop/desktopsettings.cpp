@@ -48,7 +48,7 @@ bool DesktopSettings::backgroundVisible() const
 
 bool DesktopSettings::dimsWallpaper() const
 {
-    return m_interface.property("darkModeDimsWallpaer").toBool();
+    return m_interface.property("darkModeDimsWallpaper").toBool();
 }
 
 int DesktopSettings::backgroundType() const
@@ -73,7 +73,7 @@ void DesktopSettings::init()
 {
     if (m_interface.isValid()) {
         connect(&m_interface, SIGNAL(wallpaperChanged(QString)), this, SLOT(onWallpaperChanged(QString)));
-        connect(&m_interface, SIGNAL(darkModeDimsWallpaerChanged()), this, SIGNAL(dimsWallpaperChanged()));
+        connect(&m_interface, SIGNAL(darkModeDimsWallpaperChanged()), this, SIGNAL(dimsWallpaperChanged()));
         connect(&m_interface, SIGNAL(backgroundTypeChanged()), this, SIGNAL(backgroundTypeChanged()));
         connect(&m_interface, SIGNAL(backgroundColorChanged()), this, SIGNAL(backgroundColorChanged()));
         connect(&m_interface, SIGNAL(backgroundVisibleChanged()), this, SIGNAL(backgroundVisibleChanged()));
