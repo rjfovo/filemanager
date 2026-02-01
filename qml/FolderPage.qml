@@ -23,7 +23,7 @@ import QtQuick.Layouts 6.0
 import Qt5Compat.GraphicalEffects 6.0
 import QtQuick.Dialogs 6.0
 
-import Cutefish.FileManager 1.0 as FM
+import cutefish.FileManager 1.0 as FM
 import FishUI 1.0 as FishUI
 
 import "./Dialogs"

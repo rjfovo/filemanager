@@ -21,7 +21,7 @@ import QtQuick 6.0
 import QtQuick.Controls 6.0
 import Qt5Compat.GraphicalEffects 6.0
 
-import Cutefish.FileManager 1.0
+import cutefish.FileManager 1.0
 import FishUI 1.0 as FishUI
 
 Item {

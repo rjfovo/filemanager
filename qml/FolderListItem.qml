@@ -22,7 +22,7 @@ import QtQuick.Controls 6.0
 import QtQuick.Layouts 6.0
 import Qt5Compat.GraphicalEffects 6.0
 import FishUI 1.0 as FishUI
-import Cutefish.FileManager 1.0
+import cutefish.FileManager 1.0
 
 Item {
     id: _listItem
@@ -52,7 +52,7 @@ Item {
 //                                             _listItem.x,
 //                                             _listItem.y,
 //                                             _listItem.width, _listItem.height, result.image)
-//            })
+//            }, { targetSize: Qt.size(_listItem.width, _listItem.height) })
 //        }
 //    }
 

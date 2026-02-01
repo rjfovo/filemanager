@@ -20,8 +20,8 @@ import QtQuick 6.0
 import QtQuick.Controls 6.0
 import QtQuick.Layouts 6.0
 
-import Cutefish.FileManager 1.0
-import Cutefish.DragDrop 1.0 as DragDrop
+import cutefish.FileManager 1.0
+import cutefish.DragDrop 1.0 as DragDrop
 import FishUI 1.0 as FishUI
 
 GridView {

@@ -24,7 +24,7 @@ import QtQuick.Window 6.0
 import Qt5Compat.GraphicalEffects 6.0
 
 import FishUI 1.0 as FishUI
-import Cutefish.FileManager 1.0
+import cutefish.FileManager 1.0
 
 ListView {
     id: sideBar

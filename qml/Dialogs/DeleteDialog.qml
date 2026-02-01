@@ -22,7 +22,7 @@ import QtQuick.Controls 6.0
 import QtQuick.Window 6.0
 import QtQuick.Layouts 6.0
 import FishUI 1.0 as FishUI
-import Cutefish.FileManager 1.0
+import cutefish.FileManager 1.0
 
 FishUI.Window {
     id: control
