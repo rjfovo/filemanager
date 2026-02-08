@@ -20,8 +20,8 @@ import QtQuick 6.0
 import QtQuick.Controls 6.0
 import QtQuick.Layouts 6.0
 
-import cutefish.FileManager 1.0
-import cutefish.DragDrop 1.0 as DragDrop
+import Cutefish.FileManager 1.0
+import Cutefish.DragDrop 1.0 as DragDrop
 import FishUI 1.0 as FishUI
 
 GridView {
@@ -333,7 +333,7 @@ GridView {
         enabled: true
         z: -1
 
-        onPressed: {
+        onPressed: (mouse) => {
             control.forceActiveFocus()
 
             if (control.editor && childAt(mouse.x, mouse.y) !== control.editor)
@@ -389,7 +389,7 @@ GridView {
             }
         }
 
-        onPositionChanged: {
+        onPositionChanged: (mouse) => {
             control.ctrlPressed = (mouse.modifiers & Qt.ControlModifier)
             control.shiftPressed = (mouse.modifiers & Qt.ShiftModifier)
 
@@ -466,7 +466,7 @@ GridView {
             }
         }
 
-        onClicked: {
+        onClicked: (mouse) => {
             clearPressState()
 
             if (mouse.buttons & Qt.RightButton) {
@@ -474,12 +474,12 @@ GridView {
             }
         }
 
-        onDoubleClicked: {
+        onDoubleClicked: (mouse) => {
             if (mouse.button === Qt.LeftButton && control.pressedItem)
                 dirModel.openSelected()
         }
 
-        onReleased: {
+        onReleased: (mouse) => {
             // 当选择多个文件的时候，在这选择里的文件中点击
             if (pressedItem != null &&
                     !control.rubberBand &&
@@ -497,7 +497,7 @@ GridView {
 
         onCanceled: pressCanceled()
 
-        onWheel: {
+        onWheel: (wheel) => {
             if (wheel.modifiers & Qt.ControlModifier) {
                 if (wheel.angleDelta.y > 0)
                     control.increaseIconSize()

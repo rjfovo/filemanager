@@ -50,10 +50,41 @@
 Application::Application(int& argc, char** argv)
     : QApplication(argc, argv)
     , m_instance(false)
+    , m_desktop(nullptr)
 {
     if (QDBusConnection::sessionBus().registerService("com.cutefish.FileManager")) {
         setOrganizationName("cutefishos");
         setWindowIcon(QIcon::fromTheme("file-manager"));
+
+        // Set icon theme for Qt6
+        // In Qt6, we need to ensure icon theme is properly set
+        // First set the search paths
+        QStringList iconThemePaths;
+        iconThemePaths << "/usr/share/icons";
+        iconThemePaths << QDir::homePath() + "/.local/share/icons";
+        iconThemePaths << "/usr/local/share/icons";
+        QIcon::setThemeSearchPaths(iconThemePaths);
+        
+        // Try to set icon theme in order of preference
+        QStringList preferredThemes = {"cutefish", "Crule", "Crule-dark", "breeze", "Adwaita", "hicolor"};
+        QString themeSet = "hicolor"; // default fallback
+        
+        for (const QString &theme : preferredThemes) {
+            QString themePath = QString("/usr/share/icons/%1").arg(theme);
+            if (QDir(themePath).exists()) {
+                themeSet = theme;
+                break;
+            }
+        }
+        
+        QIcon::setThemeName(themeSet);
+        qDebug() << "FileManager: Icon theme set to:" << QIcon::themeName() << "from search paths:" << QIcon::themeSearchPaths();
+        
+        // Ensure QIcon image provider is available for QML
+        // This is needed for image://icontheme/ URLs to work
+        if (QIcon::themeName().isEmpty()) {
+            qWarning() << "FileManager: No icon theme set! image://icontheme/ URLs will not work.";
+        }
 
         new FileManagerAdaptor(this);
         new DBusInterface;
@@ -72,6 +103,14 @@ Application::Application(int& argc, char** argv)
         }
 
         m_instance = true;
+    }
+}
+
+Application::~Application()
+{
+    if (m_desktop) {
+        delete m_desktop;
+        m_desktop = nullptr;
     }
 }
 
@@ -159,7 +198,10 @@ bool Application::parseCommandLineArgs()
         QPixmapCache::setCacheLimit(2048);
 
         if (parser.isSet(desktopOption)) {
-            Desktop desktop;
+            // 创建 Desktop 对象并设置为应用程序的子对象，确保其生命周期与应用程序相同
+            if (!m_desktop) {
+                m_desktop = new Desktop(this);
+            }
         } else {
             openFiles(formatUriList(parser.positionalArguments()));
         }

@@ -4,7 +4,7 @@ import QtQuick.Layouts 6.0
 import QtQuick.Window 6.0
 import Qt5Compat.GraphicalEffects 6.0
 
-import cutefish.FileManager 1.0 as FM
+import Cutefish.FileManager 1.0 as FM
 import FishUI 1.0 as FishUI
 
 Item {
@@ -35,12 +35,12 @@ Item {
         id: wallpaper
 
         Image {
-            source: "file://" + settings.wallpaper
+            source: settings.wallpaper ? "file://" + settings.wallpaper : ""
             sourceSize: Qt.size(width * Screen.devicePixelRatio,
                                 height * Screen.devicePixelRatio)
             fillMode: Image.PreserveAspectCrop
             clip: true
-            visible: settings.backgroundVisible
+            visible: settings.backgroundVisible && source.toString() !== ""
             cache: false
 
             // Clear cache

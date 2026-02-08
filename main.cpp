@@ -39,8 +39,8 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+    // Qt6: High DPI support is enabled by default, no need for AA_UseHighDpiPixmaps and AA_EnableHighDpiScaling
+    // These attributes are deprecated in Qt6
 
     // Register QML Type.
     const char *uri = "Cutefish.FileManager";

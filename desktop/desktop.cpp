@@ -23,6 +23,8 @@
 
 #include <QGuiApplication>
 #include <QDBusServiceWatcher>
+#include <QTimer>
+#include <QDebug>
 
 Desktop::Desktop(QObject *parent)
     : QObject(parent)
@@ -39,8 +41,14 @@ void Desktop::screenAdded(QScreen *screen)
 {
     if (!m_list.contains(screen)) {
         DesktopView *view = new DesktopView(screen);
-        view->show();
+        // 先隐藏窗口，然后延迟显示，确保窗口管理器正确设置窗口属性
+        view->hide();
         m_list.insert(screen, view);
+        
+        // 使用定时器延迟显示，避免窗口在初始化过程中显示
+        QTimer::singleShot(1000, view, [view]() {
+            view->show();
+        });
     }
 }
 

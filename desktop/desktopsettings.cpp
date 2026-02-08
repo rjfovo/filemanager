@@ -21,6 +21,10 @@
 
 #include <QDBusServiceWatcher>
 #include <QProcess>
+#include <QFile>
+#include <QDir>
+#include <QDirIterator>
+#include <algorithm>
 
 DesktopSettings::DesktopSettings(QObject *parent)
     : QObject(parent)
@@ -38,27 +42,76 @@ DesktopSettings::DesktopSettings(QObject *parent)
 
 QString DesktopSettings::wallpaper() const
 {
+    // 如果从 D-Bus 获取的路径为空，使用默认壁纸
+    if (m_wallpaper.isEmpty()) {
+        // 首先尝试cutefishos壁纸目录
+        QDir wallpaperDir("/usr/share/backgrounds/cutefishos");
+        if (wallpaperDir.exists()) {
+            QStringList filters;
+            filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp";
+            QStringList files = wallpaperDir.entryList(filters, QDir::Files);
+            if (!files.isEmpty()) {
+                // 选择第一张壁纸（按文件名排序）
+                files.sort();
+                return wallpaperDir.absoluteFilePath(files.first());
+            }
+        }
+        
+        // 如果cutefishos目录没有壁纸，尝试其他壁纸目录
+        QDir otherWallpaperDir("/usr/share/wallpapers");
+        if (otherWallpaperDir.exists()) {
+            // 查找任何图片文件
+            QStringList filters;
+            filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp";
+            
+            // 递归查找所有子目录
+            QDirIterator it("/usr/share/wallpapers", filters, QDir::Files, QDirIterator::Subdirectories);
+            if (it.hasNext()) {
+                return it.next();
+            }
+        }
+        
+        // 如果所有尝试都失败，返回空字符串
+        return QString();
+    }
+    
     return m_wallpaper;
 }
 
 bool DesktopSettings::backgroundVisible() const
 {
-    return m_interface.property("backgroundVisible").toBool();
+    if (m_interface.isValid()) {
+        return m_interface.property("backgroundVisible").toBool();
+    }
+    // 默认显示背景
+    return true;
 }
 
 bool DesktopSettings::dimsWallpaper() const
 {
-    return m_interface.property("darkModeDimsWallpaper").toBool();
+    if (m_interface.isValid()) {
+        return m_interface.property("darkModeDimsWallpaper").toBool();
+    }
+    // 默认不调暗壁纸
+    return false;
 }
 
 int DesktopSettings::backgroundType() const
 {
-    return m_interface.property("backgroundType").toInt();
+    if (m_interface.isValid()) {
+        return m_interface.property("backgroundType").toInt();
+    }
+    // 默认使用壁纸类型（0=壁纸，1=纯色）
+    return 0;
 }
 
 QString DesktopSettings::backgroundColor() const
 {
-    return m_interface.property("backgroundColor").toString();
+    if (m_interface.isValid()) {
+        return m_interface.property("backgroundColor").toString();
+    }
+    // 默认背景颜色
+    return "#2B8ADA";
 }
 
 void DesktopSettings::launch(const QString &command, const QStringList &args)
@@ -78,6 +131,11 @@ void DesktopSettings::init()
         connect(&m_interface, SIGNAL(backgroundColorChanged()), this, SIGNAL(backgroundColorChanged()));
         connect(&m_interface, SIGNAL(backgroundVisibleChanged()), this, SIGNAL(backgroundVisibleChanged()));
         m_wallpaper = m_interface.property("wallpaper").toString();
+        emit wallpaperChanged();
+    } else {
+        // 如果DBus服务不可用，设置一个默认壁纸路径
+        // wallpaper()方法会在被调用时返回实际的默认壁纸
+        m_wallpaper = QString();
         emit wallpaperChanged();
     }
 }

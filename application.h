@@ -22,12 +22,15 @@
 
 #include <QApplication>
 
+class Desktop;
+
 class Application : public QApplication
 {
     Q_OBJECT
 
 public:
     explicit Application(int& argc, char** argv);
+    ~Application();
 
     int run();
 
@@ -45,6 +48,7 @@ private:
 
 private:
     bool m_instance;
+    Desktop *m_desktop;
 };
 
 #endif // APPLICATION_H
