@@ -76,19 +76,29 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
     setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::WindowDoesNotAcceptFocus);
     
     // 设置窗口类型为桌面，确保窗口管理器正确处理
-    // 在Qt6中，我们需要使用setProperty来设置窗口类型
+    // 在Qt6中，我们需要使用正确的窗口类型设置方法
+    // 首先尝试使用Qt6的原生方法
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt6中设置桌面窗口类型的正确方法
+    setProperty("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP");
+    // 同时设置Qt内部属性
     setProperty("_q_platform_WindowType", "desktop");
+    // 对于Wayland，可能需要不同的处理
+    if (QGuiApplication::platformName().contains("wayland", Qt::CaseInsensitive)) {
+        // Wayland下可能需要不同的属性
+        setProperty("_q_platform_WindowType", "desktop");
+    }
+#else
+    // Qt5兼容代码
+    setProperty("_q_platform_WindowType", "desktop");
+    setProperty("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP");
+#endif
     
     // 确保窗口不会获得焦点
     setProperty("_q_NoFocus", true);
     
     // 移除透明输入标志，以便桌面可以接收鼠标事件
     // setFlags(flags() | Qt::WindowTransparentForInput | Qt::WindowDoesNotAcceptFocus);
-    
-    // 在Qt6中，尝试使用KWindowSystem设置窗口类型
-    // 注意：KF6中KWindowSystem的API可能已经改变
-    // 我们尝试使用Qt原生的方式
-    setProperty("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP");
 
     // 设置图标主题
     // 在Qt6中，每个QML引擎都需要确保图标主题可用
