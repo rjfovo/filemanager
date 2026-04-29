@@ -21,8 +21,9 @@
 #define APPLICATION_H
 
 #include <QApplication>
+#include <QList>
 
-class Desktop;
+class Window;
 
 class Application : public QApplication
 {
@@ -48,7 +49,7 @@ private:
 
 private:
     bool m_instance;
-    Desktop *m_desktop;
+    QList<Window *> m_windows;
 };
 
 #endif // APPLICATION_H

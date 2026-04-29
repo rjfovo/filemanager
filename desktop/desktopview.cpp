@@ -33,8 +33,16 @@
 #include <QDir>
 #include <QQuickImageProvider>
 #include <QPixmap>
+#include <QTimer>
 
 #include <KWindowSystem>
+
+// KF6: KX11Extras 用于 X11 平台设置窗口类型
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <KF6/KWindowSystem/KX11Extras>
+#else
+#include <KX11Extras>
+#endif
 
 // Simple IconThemeProvider for Qt6 compatibility
 class IconThemeProvider : public QQuickImageProvider
@@ -73,7 +81,8 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
 
     // 在Qt6中，Qt::WindowType::Desktop可能不再像Qt5那样工作
     // 使用更兼容的标志组合
-    setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::WindowDoesNotAcceptFocus);
+    // 注意：使用 setFlags(flags() | ...) 来添加标志，而不是替换所有标志
+    setFlags(flags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::WindowDoesNotAcceptFocus);
     
     // 设置窗口类型为桌面，确保窗口管理器正确处理
     // 在Qt6中，我们需要使用正确的窗口类型设置方法
@@ -148,6 +157,16 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
 
     connect(m_screen, &QScreen::virtualGeometryChanged, this, &DesktopView::onGeometryChanged);
     connect(m_screen, &QScreen::geometryChanged, this, &DesktopView::onGeometryChanged);
+
+    // 使用 KX11Extras 正确设置桌面窗口类型
+    // 在 KDE6/KWin6 中，setProperty("_NET_WM_WINDOW_TYPE", ...) 可能不再有效
+    // 需要使用 KX11Extras::setType 来确保窗口被正确识别为桌面窗口
+    QTimer::singleShot(0, this, [this]() {
+        if (QGuiApplication::platformName() == "xcb") {
+            KX11Extras::setType(winId(), NET::Desktop);
+            KX11Extras::setOnAllDesktops(winId(), true);
+        }
+    });
 }
 
 QRect DesktopView::screenRect()

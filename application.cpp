@@ -20,7 +20,6 @@
 #include "application.h"
 #include "dbusinterface.h"
 #include "window.h"
-#include "desktop/desktop.h"
 #include "thumbnailer/thumbnailprovider.h"
 #include "filemanageradaptor.h"
 
@@ -50,7 +49,6 @@
 Application::Application(int& argc, char** argv)
     : QApplication(argc, argv)
     , m_instance(false)
-    , m_desktop(nullptr)
 {
     if (QDBusConnection::sessionBus().registerService("com.cutefish.FileManager")) {
         setOrganizationName("cutefishos");
@@ -108,10 +106,6 @@ Application::Application(int& argc, char** argv)
 
 Application::~Application()
 {
-    if (m_desktop) {
-        delete m_desktop;
-        m_desktop = nullptr;
-    }
 }
 
 int Application::run()
@@ -124,8 +118,14 @@ int Application::run()
 
 void Application::openFiles(const QStringList &paths)
 {
-    for (const QString &path : paths) {
-        openWindow(path);
+    if (paths.isEmpty()) {
+        // 如果没有指定路径，打开默认主目录
+        qDebug() << "FileManager::openFiles - paths is empty, opening home directory";
+        openWindow(QDir::homePath());
+    } else {
+        for (const QString &path : paths) {
+            openWindow(path);
+        }
     }
 }
 
@@ -158,6 +158,14 @@ void Application::openWindow(const QString &path)
     w->addImageProvider("thumbnailer", new ThumbnailProvider());
     
     w->load(QUrl("qrc:/qml/main.qml"));
+    
+    // 存储窗口对象，防止被垃圾回收
+    m_windows.append(w);
+    
+    // 窗口关闭时自动从列表中移除
+    connect(w, &QObject::destroyed, this, [this, w]() {
+        m_windows.removeAll(w);
+    });
 }
 
 QStringList Application::formatUriList(const QStringList &list)
@@ -183,9 +191,6 @@ bool Application::parseCommandLineArgs()
 
     parser.addPositionalArgument("files", "Files", "[FILE1, FILE2,...]");
 
-    QCommandLineOption desktopOption(QStringList() << "d" << "desktop" << "Desktop Mode");
-    parser.addOption(desktopOption);
-
     QCommandLineOption emptyTrashOption(QStringList() << "e" << "empty-trash" << "Empty Trash");
     parser.addOption(emptyTrashOption);
 
@@ -194,18 +199,17 @@ bool Application::parseCommandLineArgs()
 
     parser.process(arguments());
 
+    qDebug() << "FileManager::parseCommandLineArgs - m_instance:" << m_instance;
+    qDebug() << "FileManager::parseCommandLineArgs - arguments:" << arguments();
+    qDebug() << "FileManager::parseCommandLineArgs - positionalArguments:" << parser.positionalArguments();
+
     if (m_instance) {
         QPixmapCache::setCacheLimit(2048);
 
-        if (parser.isSet(desktopOption)) {
-            // 创建 Desktop 对象并设置为应用程序的子对象，确保其生命周期与应用程序相同
-            if (!m_desktop) {
-                m_desktop = new Desktop(this);
-            }
-        } else {
-            openFiles(formatUriList(parser.positionalArguments()));
-        }
+        qDebug() << "FileManager::parseCommandLineArgs - Opening files";
+        openFiles(formatUriList(parser.positionalArguments()));
     } else {
+        qDebug() << "FileManager::parseCommandLineArgs - Second instance, calling via D-Bus";
         QDBusInterface iface("com.cutefish.FileManager",
                              "/FileManager",
                              "com.cutefish.FileManager",

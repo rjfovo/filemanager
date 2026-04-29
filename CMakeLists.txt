@@ -51,11 +51,6 @@ add_executable(cutefish-filemanager
   widgets/rubberband.cpp
   widgets/itemviewadapter.cpp
 
-  desktop/desktop.cpp
-  desktop/desktopview.cpp
-  desktop/desktopsettings.cpp
-  desktop/dockdbusinterface.cpp
-
   helper/datehelper.cpp
   helper/pathhistory.cpp
   helper/fm.cpp
