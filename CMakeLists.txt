@@ -1,24 +1,27 @@
-cmake_minimum_required(VERSION 3.21)  # Qt6需要CMake 3.16以上，推荐3.21[citation:6]
+cmake_minimum_required(VERSION 3.21)
 project(cutefish-filemanager LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)  # Qt6推荐使用C++17[citation:6]
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 查找Qt6包，使用无版本命令[citation:3]
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core DBus Quick LinguistTools)
+# 查找Qt6包
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core DBus Quick QuickControls2 LinguistTools)
 
-# 查找KF6包，注意模块名称可能有所变化
+# 查找KF6包
 find_package(KF6KIO REQUIRED)
 find_package(KF6Solid REQUIRED)
 find_package(KF6WindowSystem REQUIRED)
 find_package(KF6Config REQUIRED)
 find_package(KF6XmlGui REQUIRED)
+
+# 共享文件模型库（模型/视图/拖拽/缩略图/对话框等）
+# 桌面进程(cutefish-desktop)与本文件管理器共用
+add_subdirectory(../filemodel filemodel)
 
 # 使用Qt6的DBus适配器命令
 qt6_add_dbus_adaptor(DBUS_SOURCES
@@ -28,43 +31,7 @@ qt6_add_dbus_adaptor(DBUS_SOURCES
 add_executable(cutefish-filemanager
   main.cpp
   application.cpp
-  window.cpp
   dbusinterface.cpp
-
-  draganddrop/declarativedroparea.cpp
-  draganddrop/declarativedragdropevent.cpp
-  draganddrop/declarativemimedata.cpp
-
-  model/foldermodel.cpp
-  model/placesmodel.cpp
-  model/placesitem.cpp
-  model/pathbarmodel.cpp
-  model/dirlister.cpp
-  model/positioner.cpp
-
-  cio/cfilejob.cpp
-  cio/cfilesizejob.cpp
-
-  dialogs/createfolderdialog.cpp
-  dialogs/filepropertiesdialog.cpp
-  dialogs/openwithdialog.cpp
-  widgets/rubberband.cpp
-  widgets/itemviewadapter.cpp
-
-  helper/datehelper.cpp
-  helper/pathhistory.cpp
-  helper/fm.cpp
-  helper/shortcut.cpp
-  helper/filelauncher.cpp
-  helper/keyboardsearchmanager.cpp
-
-  mimetype/mimeappmanager.cpp
-  mimetype/xdgdesktopfile.cpp
-
-  thumbnailer/thumbnailprovider.cpp
-  thumbnailer/thumbnailcache.cpp
-
-  desktopiconprovider.cpp
 
   qml.qrc
 
@@ -73,9 +40,12 @@ add_executable(cutefish-filemanager
 
 target_link_libraries(cutefish-filemanager
   PRIVATE
+  cutefish-filemodel
+
   Qt6::Core
   Qt6::DBus
   Qt6::Quick
+  Qt6::QuickControls2
   Qt6::Widgets
 
   KF6::KIOWidgets
@@ -86,8 +56,6 @@ target_link_libraries(cutefish-filemanager
   KF6::WindowSystem
   KF6::ConfigCore
   KF6::ConfigGui
-
-  # FishUI (如果可用，也需要更新到Qt6版本)
 )
 
 # 使用Qt6的翻译命令
@@ -115,3 +83,4 @@ add_dependencies(${PROJECT_NAME} translations)
 install(TARGETS cutefish-filemanager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES cutefish-filemanager.desktop DESTINATION "/usr/share/applications")
 install(FILES ${QM_FILES} DESTINATION /usr/share/cutefish-filemanager/translations)
+

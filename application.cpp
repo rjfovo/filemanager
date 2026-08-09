@@ -32,6 +32,7 @@
 #include <QTranslator>
 #include <QFileInfo>
 #include <QIcon>
+#include <QQuickStyle>
 #include <QDir>
 
 // KIO
@@ -50,6 +51,11 @@ Application::Application(int& argc, char** argv)
     : QApplication(argc, argv)
     , m_instance(false)
 {
+    // 显式指定 Qt Quick Controls 主题为 fish-style：
+    // 会话设置了 QT_STYLE_OVERRIDE=cutefish，QQuickStyle 解析时优先用它（而不是
+    // QT_QUICK_CONTROLS_STYLE），导致回退到 Basic 的"默认 demo 样式"。
+    QQuickStyle::setStyle(QStringLiteral("fish-style"));
+
     if (QDBusConnection::sessionBus().registerService("com.cutefish.FileManager")) {
         setOrganizationName("cutefishos");
         setWindowIcon(QIcon::fromTheme("file-manager"));
