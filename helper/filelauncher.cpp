@@ -102,6 +102,9 @@ bool FileLauncher::startDetached(const QString &exec, const QString &workingDir,
 
     if (iface.isValid()) {
         iface.asyncCall("launch", exec, workingDir, args).waitForFinished();
+    } else {
+        // 修复：session D-Bus 服务不可用时直接启动，避免静默失败
+        QProcess::startDetached(exec, args, workingDir);
     }
 
     return true;

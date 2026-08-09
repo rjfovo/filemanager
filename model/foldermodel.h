@@ -65,6 +65,13 @@ class FolderModel : public QSortFilterProxyModel, public QQmlParserStatus
     Q_PROPERTY(bool showHiddenFiles READ showHiddenFiles WRITE setShowHiddenFiles NOTIFY showHiddenFilesChanged)
     Q_PROPERTY(int currentIndex READ currentIndex NOTIFY currentIndexChanged)
 
+    // 右键菜单动态状态（QML 菜单可见性/启用状态依据，打开菜单前调用 updateMenuState 刷新）
+    Q_PROPERTY(bool isTrash READ isTrash NOTIFY menuStateChanged)
+    Q_PROPERTY(bool rootWritable READ rootWritable NOTIFY menuStateChanged)
+    Q_PROPERTY(bool hasDir READ hasDir NOTIFY menuStateChanged)
+    Q_PROPERTY(bool singleSelectedDir READ singleSelectedDir NOTIFY menuStateChanged)
+    Q_PROPERTY(bool canSetWallpaper READ canSetWallpaper NOTIFY menuStateChanged)
+
 public:
     enum DataRole {
         BlankRole = Qt::UserRole + 1,
@@ -214,6 +221,7 @@ public:
     Q_INVOKABLE void openPropertiesDialog();
     Q_INVOKABLE void openInTerminal();
     Q_INVOKABLE void openChangeWallpaperDialog();
+    Q_INVOKABLE void openDisplaySettings();
     Q_INVOKABLE void openDeleteDialog();
     Q_INVOKABLE void openInNewWindow(const QString &url = QString());
 
@@ -231,6 +239,15 @@ public:
 
     bool showHiddenFiles() const;
     void setShowHiddenFiles(bool showHiddenFiles);
+
+    bool isTrash() const;
+    bool rootWritable() const;
+    bool hasDir() const;
+    bool singleSelectedDir() const;
+    bool canSetWallpaper() const;
+
+    // 打开右键菜单前刷新菜单动态状态（更新 isTrash/rootWritable/hasDir/... 并发出 menuStateChanged）
+    Q_INVOKABLE void updateMenuState();
 
 signals:
     void urlChanged();
@@ -258,6 +275,9 @@ signals:
     void move(int x, int y, QList<QUrl> urls);
 
     void currentIndexChanged();
+
+    // 右键菜单状态刷新
+    void menuStateChanged();
 
 private slots:
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
@@ -307,6 +327,13 @@ private:
     bool m_complete;
     bool m_isDesktop;
     bool m_suffixVisible;
+
+    // 右键菜单动态状态
+    bool m_isTrash = false;
+    bool m_rootWritable = false;
+    bool m_hasDir = false;
+    bool m_singleSelectedDir = false;
+    bool m_canSetWallpaper = false;
 
     QString m_selectedItemSize;
 

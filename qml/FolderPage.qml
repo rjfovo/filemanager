@@ -193,17 +193,18 @@ Item {
                                     _viewLoader.item.contentWidth, _viewLoader.item.contentHeight)
     }
 
-    FishUI.DesktopMenu {
+    // 统一的文件右键菜单（与桌面共用同一组件）
+    FileContextMenu {
         id: folderMenu
+        model: dirModel
+    }
 
-        MenuItem {
-            text: qsTr("Open")
-            onTriggered: dirModel.openSelected()
-        }
+    Connections {
+        target: _viewLoader.item
 
-        MenuItem {
-            text: qsTr("Properties")
-            onTriggered: dirModel.openPropertiesDialog()
+        function onContextMenuRequested(x, y) {
+            dirModel.updateMenuState()
+            folderMenu.popupAt(x, y)
         }
     }
 

@@ -33,12 +33,14 @@ Item {
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
 
-    GlobalSettings {
-        id: globalSettings
-    }
+    // 调试：清空内容，二分排查 exec 立即返回问题
+}
+
 
     Wallpaper {
         anchors.fill: parent
+        // 分层桌面：壁纸由 cutefish-desktop-background 提供，本层只画图标
+        visible: !desktopLayerOnly
     }
 
     FM.FolderModel {
@@ -105,6 +107,22 @@ Item {
 
         Component.onCompleted: {
             dirModel.requestRename.connect(rename)
+        }
+    }
+
+    // 统一的桌面右键菜单（QML 菜单机制，与文件管理器共用同一组件）
+    // 打开前调用 model.updateMenuState() 刷新动态可见性/启用状态
+    FileContextMenu {
+        id: desktopMenu
+        model: dirModel
+    }
+
+    Connections {
+        target: _folderView
+
+        function onContextMenuRequested(x, y) {
+            dirModel.updateMenuState()
+            desktopMenu.popupAt(x, y)
         }
     }
 

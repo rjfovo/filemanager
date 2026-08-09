@@ -10,6 +10,10 @@ import FishUI 1.0 as FishUI
 Item {
     id: control
 
+    // 分层桌面：副屏壁纸由 cutefish-desktop-background 提供，
+    // 本层在分层模式下不重复渲染壁纸
+    visible: !desktopLayerOnly
+
     FM.DesktopSettings {
         id: settings
     }

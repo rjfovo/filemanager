@@ -141,6 +141,10 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
 
     engine()->rootContext()->setContextProperty("desktopView", this);
     engine()->rootContext()->setContextProperty("Dock", DockDBusInterface::self());
+    // 分层桌面：壁纸由独立的 cutefish-desktop-background 提供，
+    // 本层只渲染桌面图标与右键菜单（背景透明）。
+    // 若 desktopLayerOnly 为 false（独立运行桌面视图时）仍可自带壁纸兜底。
+    engine()->rootContext()->setContextProperty("desktopLayerOnly", true);
     // QWindow::fromWinId(winId())->setOpacity(0.99); // 这可能导致窗口显示异常
     engine()->addImageProvider("thumbnailer", new ThumbnailProvider());
     engine()->addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
@@ -167,6 +171,8 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
             KX11Extras::setOnAllDesktops(winId(), true);
         }
     });
+
+    qDebug() << "DesktopView ctor done, winId:" << winId();
 }
 
 QRect DesktopView::screenRect()

@@ -895,12 +895,26 @@ void FolderModel::newFolder()
     QString newDirPath = rootItem().url().toLocalFile() + "/" + newName;
     QDir dir;
 
-    // 使用 mkpath 可以创建多级目录，mkdir 只能创建单级目录
     if (dir.mkpath(newDirPath)) {
-        // 目录创建成功
+        // 创建成功：主动刷新目录，确保新目录被 dirLister 及时检测到（不再依赖目录监视事件）
+        m_dirLister->updateDirectory(rootItem().url());
+
+        // 兜底：无论 onRowsInserted 是否触发，都尝试选中新目录并进入重命名，
+        // 保证"新建文件夹"始终有可见反馈
+        const QUrl newUrl = QUrl::fromLocalFile(newDirPath);
+        QTimer::singleShot(200, this, [this, newUrl]() {
+            const QModelIndex idx = indexForUrl(newUrl);
+            if (!idx.isValid())
+                return;
+
+            const QModelIndex &proxyIdx = mapFromSource(idx);
+            clearSelection();
+            setSelected(proxyIdx.row());
+            emit requestRename();
+        });
+
         qDebug() << "Directory created successfully at" << newDirPath;
     } else {
-        // 目录创建失败
         qDebug() << "Failed to create directory at" << newDirPath;
     }
 }
@@ -1392,7 +1406,13 @@ void FolderModel::openInTerminal()
 
 void FolderModel::openChangeWallpaperDialog()
 {
-    QProcess::startDetached("cutefish-settings", QStringList() << "-m" << "background");
+    // 通过 session 启动设置程序（更可靠：D-Bus 不可用时自动回退 QProcess）
+    FileLauncher::startDetached("cutefish-settings", QStringList() << "-m" << "background");
+}
+
+void FolderModel::openDisplaySettings()
+{
+    FileLauncher::startDetached("cutefish-settings", QStringList() << "-m" << "display");
 }
 
 void FolderModel::openDeleteDialog()
@@ -1733,6 +1753,62 @@ void FolderModel::setShowHiddenFiles(bool showHiddenFiles)
 
         emit showHiddenFilesChanged();
     }
+}
+
+bool FolderModel::isTrash() const
+{
+    return m_isTrash;
+}
+
+bool FolderModel::rootWritable() const
+{
+    return m_rootWritable;
+}
+
+bool FolderModel::hasDir() const
+{
+    return m_hasDir;
+}
+
+bool FolderModel::singleSelectedDir() const
+{
+    return m_singleSelectedDir;
+}
+
+bool FolderModel::canSetWallpaper() const
+{
+    return m_canSetWallpaper;
+}
+
+void FolderModel::updateMenuState()
+{
+    m_isTrash = (resolvedUrl().scheme() == QLatin1String("trash"));
+    m_rootWritable = !rootItem().isNull() && rootItem().isWritable();
+
+    const QModelIndexList indexes = m_selectionModel->selectedIndexes();
+    m_hasDir = false;
+    m_singleSelectedDir = false;
+    m_canSetWallpaper = false;
+
+    if (indexes.size() == 1) {
+        KFileItem item = itemForIndex(indexes.first());
+        if (!item.isNull()) {
+            if (item.isDir()) {
+                m_singleSelectedDir = true;
+            }
+            m_canSetWallpaper = !m_isTrash && supportSetAsWallpaper(item.mimetype());
+        }
+    }
+
+    for (const QModelIndex &index : indexes) {
+        KFileItem item = itemForIndex(index);
+        if (!item.isNull() && item.isDir()) {
+            m_hasDir = true;
+            break;
+        }
+    }
+
+    emit menuStateChanged();
 }
 
 QString FolderModel::selectedItemSize() const

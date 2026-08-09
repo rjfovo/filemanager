@@ -450,22 +450,41 @@ void MimeAppManager::launchTerminal(const QString &path)
 
     QSettings settings("cutefishos", "defaultApps");
     QString defaultTerminal = settings.value("terminal").toString();
-    QString command;
+    QString exec = m_terminalApps.first().value("Exec").toString();
 
+    // 使用用户设置中的默认终端
     if (!defaultTerminal.isEmpty()) {
         for (const XdgDesktopFile &f : m_terminalApps) {
             if (f.fileName().contains(defaultTerminal)) {
-                command = f.value("Exec").toString();
+                exec = f.value("Exec").toString();
                 break;
             }
         }
     }
 
-    if (command.isEmpty()) {
-        command = m_terminalApps.first().value("Exec").toString();
-    }
+    if (exec.isEmpty())
+        exec = QStringLiteral("x-terminal-emulator");
 
-    FileLauncher::startDetached(command, path, QStringList());
+    // 解析 Exec 命令行（可能带参数，如 "xterm -e" / "cutefish-terminal"）
+    QStringList parts = exec.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+        return;
+
+    QString program = parts.first();
+    QStringList args = parts.mid(1);
+
+    // 替换桌面文件占位符
+    args.replaceInStrings(QStringLiteral("%d"), path);
+    args.replaceInStrings(QStringLiteral("%D"), path);
+    args.replaceInStrings(QStringLiteral("%w"), path);
+    args.replaceInStrings(QStringLiteral("%W"), path);
+    args.replaceInStrings(QStringLiteral("%f"), path);
+    args.removeAll(QStringLiteral("%F"));
+    args.removeAll(QStringLiteral("%U"));
+    args.removeAll(QStringLiteral("%u"));
+
+    // path 作为工作目录传入，终端启动后即位于该目录
+    FileLauncher::startDetached(program, path, args);
 }
 
 void MimeAppManager::onFileChanged(const QString &path)
